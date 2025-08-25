@@ -8,7 +8,6 @@
 DHT dht(DHTPIN, DHTTYPE); 
 
 //Variables
-int chk;
 float hum;  
 float temp; 
 
