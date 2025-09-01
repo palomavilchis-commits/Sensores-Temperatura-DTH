@@ -1,0 +1,46 @@
+import serial
+import time
+import csv
+
+# Crea el archivi para almacenar los datos
+with open('DHT11_SensorData.csv', mode='a', newline='') as sensor_file:
+    sensor_writer = csv.writer(sensor_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+    sensor_writer.writerow(["Temp", "Humedad", "Tiempo"]) #nombre de columnas
+
+# Lectura de datos desde el puerto serie, Esta confifuración es para mac
+# Para windows cambiar por: com = "COM3"
+com = "/dev/cu.usbmodem14101"
+baud = 9600
+x = serial.Serial(com, baud, timeout=0.1)
+
+
+while x.isOpen():
+    data = x.readline().decode('utf-8').strip()
+    if data != '':  
+        try:
+            # activa el formato "Humedad:  %, Temp: ºC"
+            if 'Humedad:' in data and 'Temp:' in data:
+                # separa por coma
+                parts = data.split(',')
+                
+                # Extrae los valores quitando el simbolo %
+                hum_part = parts[0].strip()  
+                humidity_str = hum_part.split(':')[1].strip()  
+                humidity = float(humidity_str.replace('%', '').strip())
+                
+                # Extrae el valor de temperatura quitando el ºC
+                temp_part = parts[1].strip()  
+                temperature_str = temp_part.split(':')[1].strip()  
+                temperature = float(temperature_str.replace('ºC', '').strip())  
+                
+                print(f"Temperatura: {temperature}°C, Humedad: {humidity}%")
+                
+                # Guarda los datos con la marca de tiempo
+                with open('DHT11_SensorData.csv', mode='a', newline='') as sensor_file:
+                    sensor_writer = csv.writer(sensor_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+                    sensor_writer.writerow([temperature, humidity, time.strftime(" %M:%S")]) #el tiempo est determinado por minuto y segundo.
+       
+                    
+        except (ValueError, IndexError) as e:
+            print(f"Could not parse DHT11 data: {data} ({e})")
+
